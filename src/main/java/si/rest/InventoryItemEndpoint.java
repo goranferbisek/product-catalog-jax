@@ -18,6 +18,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
@@ -58,6 +60,24 @@ public class InventoryItemEndpoint {
 	
 	@GET
 	@Path("/catalog/{catalogItemId}")
+	public void asyncFindByCatalogId(@NotNull @PathParam("catalogItemId") Long catalogItemId,
+			@Suspended AsyncResponse ar) {
+		new Thread() {
+			public void run() {
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				ar.resume(findByCatalogId(catalogItemId));
+			}
+		}.start();
+	}
+	
+	// @GET
+	// @Path("/catalog/{catalogItemId}")
 	public InventoryItem findByCatalogId(@NotNull @PathParam("catalogItemId") Long catalogItemId) {
 		TypedQuery<InventoryItem> query = this.entityManager
 				.createQuery("select i from InventoryItem i where i.catalogItemId = :catalogItemId", InventoryItem.class)
